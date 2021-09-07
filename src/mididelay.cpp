@@ -28,10 +28,47 @@ void task_loop(int* flag,
         std::string parameterFilename) {
     Delayer delayer;
     delayer.read_parameter_file(parameterFilename);
+    RtMidiIn* midiin = 0;
+    try {
+        midiin = new RtMidiIn(
+            RtMidi::UNSPECIFIED,
+            "mididelay in"
+        );
+    } catch(RtMidiError &error) {
+        error.printMessage();
+        exit(EXIT_FAILURE);
+    }
+    midiin->openVirtualPort();
+    midiin->ignoreTypes(true, true, true);
+    RtMidiOut* midiout = 0;
+    try {
+        midiout = new RtMidiOut(
+            RtMidi::UNSPECIFIED,
+            "mididelay out"
+        );
+    } catch(RtMidiError &error) {
+        error.printMessage();
+        exit(EXIT_FAILURE);
+    }
+    midiout->openVirtualPort();
+    std::vector < unsigned char > message;
+    message.clear();
     while (*flag) {
         std::cout << "hallo\n";
-        usleep(1000000);
+        midiin->getMessage(&message);
+        if (message.size() >= 3) {
+            delayer.push(message);
+            message.clear();
+        }
+        if (delayer.something_to_pull()) {
+            message = delayer.pull();
+            midiout->sendMessage(&message);
+            message.clear();
+        }
+        usleep(100000);
     }
+    midiin->closePort();
+    midiout->closePort();
 }
 
 int main(int argc, char** argv) {

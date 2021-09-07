@@ -5,7 +5,6 @@ class Delayer {
     private:
         std::vector < TimedMessage > zData{};
         Timer zTimer;
-        std::vector < int > zChannels;
         std::vector < int > zDelays;
     public:
         Delayer();
@@ -13,6 +12,8 @@ class Delayer {
         void start();
         int something_to_pull();
         std::vector < unsigned char > pull();
+        void push(std::vector < unsigned char>
+                message);
         void read_parameter_file(
                 std::string filename);
 };
